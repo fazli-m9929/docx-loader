@@ -1,9 +1,11 @@
-def mathml_to_latex(element):
+from docx.oxml.text.paragraph import CT_P
+
+def mathml_to_latex(element: CT_P):
     """ Convert MathML XML element to LaTeX string. """
     # Namespace for MathML
     namespaces = {'m': 'http://schemas.openxmlformats.org/officeDocument/2006/math'}
     
-    def visit_element(el):
+    def visit_element(el: CT_P):
         tag = el.tag.split('}')[-1]  # Remove namespace prefix
         
         if tag == 'r':
@@ -58,6 +60,6 @@ def mathml_to_latex(element):
     return visit_element(element)
 
 
-def contains_mathml(element):
+def contains_mathml(element: CT_P):
     xml_str = element.xml
     return '<m:' in xml_str
