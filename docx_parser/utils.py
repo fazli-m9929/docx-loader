@@ -1,6 +1,9 @@
 from docx.oxml.text.paragraph import CT_P
 from lxml.etree import ElementTree, _Element
 from docxlatex import Document
+from docx.table import Table
+from io import StringIO
+import docx.document
 
 
 
@@ -34,3 +37,48 @@ def extract_toc_entries(xml_tree: _Element):
                 toc_entries.append(toc_text)
 
     return '\n'.join(toc_entries)
+
+
+def table_to_plain_text(table: Table):
+    output = StringIO()
+
+    # Process the cells to handle MathML and convert them to plain text
+    for row in table.rows:
+        row_text = []
+        for cell in row.cells:
+            if contains_mathml(cell._element):  # Assuming this function exists
+                cell.text = xml_to_text(cell._element)  # Assuming this function exists
+            row_text.append(cell.text)
+        # Skip the row if all elements are empty strings
+        if all(cell_text == '' for cell_text in row_text):
+            continue
+        # Join the cell texts with commas and add a newline at the end
+        output.write("[ " +" | ".join(row_text) + " ]" + "\n")
+
+    return output.getvalue()
+
+
+def create_element_index_dict(doc: docx.document.Document):
+    body_element = doc._body._element
+
+    PARAGRAPH_TAG = 'p'
+    TABLE_TAG = 'tbl'
+    
+    para_idx = 0
+    tbl_idx = 0
+    
+    index_dict = {}
+
+    for idx, elem in enumerate(body_element):
+        tag = elem.tag.split("}")[-1]  # Extract tag name (ignore namespace)
+
+        if tag == PARAGRAPH_TAG:
+            index_dict[idx] = (tag, para_idx)
+            para_idx += 1
+        elif tag == TABLE_TAG:
+            index_dict[idx] = (tag, tbl_idx)
+            tbl_idx += 1
+        else:
+            index_dict[idx] = (tag, None)
+
+    return index_dict
