@@ -156,3 +156,54 @@ def combine_tables_with_captions(text_list):
     return combined_list
 
 
+def split_list(input_list):
+    sublists = []
+    current_sublist = []
+    empty_count = 0
+    
+    if input_list and input_list[0][1] == 'tbl':
+        sublists.append([input_list[0]])
+        input_list = input_list[1:]
+
+    for i, item in enumerate(input_list):
+        if item == ('', 'p'):
+            empty_count += 1
+        else:
+            if empty_count > 2:
+                if current_sublist:
+                    sublists.append(current_sublist)
+                current_sublist = []
+            empty_count = 0
+            
+            # Check if the current item is a table and the previous item's text length is less than 50
+            if item[1] == 'tbl' and i > 0 and len(input_list[i-1][0]) < 50:
+                # Combine the previous item with the current item
+                combined_item = (input_list[i-1][0] + '\n' + item[0], 'tbl')
+                if current_sublist and current_sublist[-1] == input_list[i-1]:
+                    current_sublist[-1] = combined_item
+                else:
+                    current_sublist.append(combined_item)
+            else:
+                current_sublist.append(item)
+        
+    if current_sublist:
+        sublists.append(current_sublist)
+
+    # Split the combined list into separate sublists
+    final_sublists = []
+    for sublist in sublists:
+        temp_sublist = []
+        for item in sublist:
+            if item[1] == 'tbl':
+                if temp_sublist:
+                    final_sublists.append(temp_sublist)
+                    temp_sublist = []
+                final_sublists.append([item])
+            else:
+                temp_sublist.append(item)
+        if temp_sublist:
+            final_sublists.append(temp_sublist)
+
+    return final_sublists
+
+
