@@ -41,18 +41,30 @@ def extract_toc_entries(xml_tree: _Element):
 
 def table_to_plain_text(table: Table):
     output = StringIO()
+    processed_cells = set()
 
     # Process the cells to handle MathML and convert them to plain text
+    previous_cell_id = (0, 0)
     for row in table.rows:
         row_text = []
         for cell in row.cells:
-            if contains_mathml(cell._element):  # Assuming this function exists
-                cell.text = xml_to_text(cell._element)  # Assuming this function exists
-            row_text.append(cell.text)
+            cell_id = cell._element.getparent().getparent().index(cell._element.getparent()), cell._element.getparent().index(cell._element)
+            if cell_id in processed_cells:
+                if cell_id == previous_cell_id:
+                    row_text.append("merged_row")
+                else:
+                    row_text.append('\t')
+            else:
+                if contains_mathml(cell._element):  # Assuming this function exists
+                    cell.text = xml_to_text(cell._element)  # Assuming this function exists
+                row_text.append(cell.text)
+                processed_cells.add(cell_id)
+            previous_cell_id = cell_id
         # Skip the row if all elements are empty strings
         if all(cell_text == '' for cell_text in row_text):
             continue
         # Join the cell texts with commas and add a newline at the end
+        row_text = [item for item in row_text if item !='merged_row']
         output.write("[ " +" | ".join(row_text) + " ]" + "\n")
 
     return output.getvalue()
