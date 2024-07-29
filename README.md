@@ -15,7 +15,6 @@ To use `DocumentLoader`, you need to have the following dependencies installed:
 
 ```bash
 pip install python-docx lxml docxlatex langchain-core
-pip install python-docx lxml docxlatex langchain-core
 ```
 ## Usage
 
